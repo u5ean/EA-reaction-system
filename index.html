@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Livestream Reaction Engine</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <!-- ======================= PAGE MAP =======================
+       1. SVG sprite     : the 4 icon shapes, defined once (hidden)
+       2. Top bar        : title · Phase 1/2 toggle · live stats
+       3. Stage          : full-screen layer where reactions fly (JS fills it)
+       4. Control bar    : emoji buttons · Send · Stress · Speed · Tint
+       5. Scripts        : GSAP + our code
+       ========================================================== -->
+
+  <!-- 1. SVG SPRITE: vector icons, filled with currentColor so they can be re-tinted at runtime -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="icon-heart" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></symbol>
+    <symbol id="icon-thumb" viewBox="0 0 24 24"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></symbol>
+    <symbol id="icon-fire" viewBox="0 0 24 24"><path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/></symbol>
+    <symbol id="icon-star" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></symbol>
+  </svg>
+
+  <!-- 2. TOP BAR -->
+  <header class="topbar">
+    <div class="panel title">Reaction Engine<small>Livestream floating reactions</small></div>
+
+    <!-- Engine toggle: aria-pressed marks which one is active (app.js updates it) -->
+    <div class="panel mode-switch" role="group" aria-label="Animation engine">
+      <button type="button" id="mode-css"  aria-pressed="true">Phase 1 · CSS keyframes</button>
+      <button type="button" id="mode-gsap" aria-pressed="false">Phase 2 · GSAP</button>
+    </div>
+
+    <!-- Live stats. FPS = frames per second; Active = reactions in flight; Nodes = real DOM elements (must fall back to 0) -->
+    <div class="panel stats" aria-live="off">
+      <span>FPS</span><b id="stat-fps">–</b>
+      <span>Active reactions</span><b id="stat-active">0</b>
+      <span>Nodes in DOM</span><b id="stat-nodes">0</b>
+    </div>
+  </header>
+
+  <!-- Short usage hint -->
+  <div class="hint" id="hint">Tip: hold “Send Reaction” to spam · “Stress ×60” is the reproducible profiling load</div>
+
+  <!-- Visual marker of the bottom spawn area -->
+  <div class="spawn-zone" aria-hidden="true"></div>
+  <!-- 3. STAGE: every reaction is appended here and removed when finished -->
+  <main class="stage" id="stage" aria-label="Reaction stage"></main>
+
+  <!-- 4. CONTROL BAR -->
+  <div class="controls panel" role="toolbar" aria-label="Reaction controls">
+    <!-- Four reaction buttons: data-type tells app.js which reaction to spawn -->
+    <button type="button" class="emoji-btn" data-type="heart" aria-label="Send heart">
+      <svg style="color:var(--heart);fill:currentColor"><use href="#icon-heart"/></svg></button>
+    <button type="button" class="emoji-btn" data-type="thumb" aria-label="Send thumbs up">
+      <svg style="color:var(--thumb);fill:currentColor"><use href="#icon-thumb"/></svg></button>
+    <button type="button" class="emoji-btn" data-type="fire" aria-label="Send fire">
+      <svg style="color:var(--fire);fill:currentColor"><use href="#icon-fire"/></svg></button>
+    <button type="button" class="emoji-btn" data-type="star" aria-label="Send star">
+      <svg style="color:var(--star);fill:currentColor"><use href="#icon-star"/></svg></button>
+
+    <!-- Spawns a random reaction; hold it down to keep spawning -->
+    <button type="button" class="btn" id="btn-send">Send Reaction</button>
+    <button type="button" class="btn secondary" id="btn-burst">Stress ×60</button>
+
+    <!-- Playback speed 0.1x–2.0x for reactions in flight (Phase 2 only; disabled in Phase 1) -->
+    <label class="speed disabled" id="speed-wrap" title="Speed control is part of Phase 2 (GSAP). Plain CSS keyframes are static rules, so they can't be re-timed mid-flight without extra JavaScript (Web Animations API)">
+      Speed
+      <input type="range" id="speed" min="0.1" max="2.0" step="0.1" value="1.0" disabled>
+      <output id="speed-out" for="speed">1.0×</output>
+    </label>
+
+    <!-- Tint: checkbox turns the override on/off, colour input picks the colour -->
+    <label class="tint" title="Extra feature: tick to recolour ALL reactions (even ones already flying) with the colour on the right. Works because the icons are vectors filled with currentColor">
+      <input type="checkbox" id="tint-on"> Tint
+      <input type="color" id="tint-color" value="#7cffd1">
+    </label>
+  </div>
+
+  <!-- 5. SCRIPTS. Order matters: GSAP first, then shared helpers, then engines, then the app that uses them.
+       Classic scripts (no ES modules) so the project also works by double-clicking index.html (file://) -->
+  <script src="vendor/gsap.min.js"></script>
+  <script src="js/icons.js"></script>
+  <script src="js/engine-css.js"></script>
+  <script src="js/engine-gsap.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

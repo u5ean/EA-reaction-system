@@ -1,0 +1,167 @@
+{
+  "chrome": "157.0.8103.78",
+  "cpuThrottle": "6x",
+  "load": "60 concurrent reactions (15ms stagger)",
+  "runs": {
+    "css": [
+      {
+        "mode": "css",
+        "peakActive": 60,
+        "nodesAfter": 0,
+        "avgFps": 44.6,
+        "p95FrameMs": 50,
+        "worstFrameMs": 83.4,
+        "framesOver33ms": 22,
+        "framesOver50ms": 7,
+        "layoutCount": 266,
+        "recalcStyleCount": 266,
+        "layoutMs": 565.2,
+        "recalcStyleMs": 1257.3,
+        "scriptMs": 93.8,
+        "mainThreadTaskMs": 4262.3,
+        "traceTally": {
+          "RunTask": {
+            "count": 6314,
+            "ms": 5425.2
+          },
+          "PrePaint": {
+            "count": 433,
+            "ms": 544.4
+          },
+          "Layerize": {
+            "count": 227,
+            "ms": 438.4
+          },
+          "Commit": {
+            "count": 228,
+            "ms": 291.3
+          },
+          "UpdateLayoutTree": {
+            "count": 264,
+            "ms": 1236.8
+          },
+          "Layout": {
+            "count": 264,
+            "ms": 537.4
+          },
+          "Paint": {
+            "count": 6935,
+            "ms": 592.3
+          }
+        }
+      },
+      {
+        "mode": "css",
+        "peakActive": 60,
+        "nodesAfter": 0,
+        "avgFps": 48.1,
+        "p95FrameMs": 33.4,
+        "worstFrameMs": 66.6,
+        "framesOver33ms": 19,
+        "framesOver50ms": 2,
+        "layoutCount": 279,
+        "recalcStyleCount": 279,
+        "layoutMs": 525.3,
+        "recalcStyleMs": 1248.2,
+        "scriptMs": 70.8,
+        "mainThreadTaskMs": 3745.4
+      },
+      {
+        "mode": "css",
+        "peakActive": 60,
+        "nodesAfter": 0,
+        "avgFps": 49.2,
+        "p95FrameMs": 33.4,
+        "worstFrameMs": 66.7,
+        "framesOver33ms": 19,
+        "framesOver50ms": 2,
+        "layoutCount": 284,
+        "recalcStyleCount": 284,
+        "layoutMs": 541.3,
+        "recalcStyleMs": 1227.9,
+        "scriptMs": 51.4,
+        "mainThreadTaskMs": 3773.7
+      }
+    ],
+    "gsap": [
+      {
+        "mode": "gsap",
+        "peakActive": 60,
+        "nodesAfter": 0,
+        "avgFps": 55.9,
+        "p95FrameMs": 33.3,
+        "worstFrameMs": 50,
+        "framesOver33ms": 6,
+        "framesOver50ms": 0,
+        "layoutCount": 123,
+        "recalcStyleCount": 436,
+        "layoutMs": 137.9,
+        "recalcStyleMs": 844.9,
+        "scriptMs": 954.1,
+        "mainThreadTaskMs": 3403.1,
+        "traceTally": {
+          "RunTask": {
+            "count": 5667,
+            "ms": 4859.6
+          },
+          "PrePaint": {
+            "count": 400,
+            "ms": 162.5
+          },
+          "Layerize": {
+            "count": 278,
+            "ms": 426.6
+          },
+          "Commit": {
+            "count": 280,
+            "ms": 299
+          },
+          "UpdateLayoutTree": {
+            "count": 435,
+            "ms": 823
+          },
+          "Layout": {
+            "count": 122,
+            "ms": 124
+          },
+          "Paint": {
+            "count": 187,
+            "ms": 57
+          }
+        }
+      },
+      {
+        "mode": "gsap",
+        "peakActive": 60,
+        "nodesAfter": 0,
+        "avgFps": 58.5,
+        "p95FrameMs": 16.8,
+        "worstFrameMs": 33.4,
+        "framesOver33ms": 1,
+        "framesOver50ms": 0,
+        "layoutCount": 119,
+        "recalcStyleCount": 431,
+        "layoutMs": 91.2,
+        "recalcStyleMs": 762.4,
+        "scriptMs": 692,
+        "mainThreadTaskMs": 2524.6
+      },
+      {
+        "mode": "gsap",
+        "peakActive": 60,
+        "nodesAfter": 0,
+        "avgFps": 55.4,
+        "p95FrameMs": 33.3,
+        "worstFrameMs": 50,
+        "framesOver33ms": 8,
+        "framesOver50ms": 0,
+        "layoutCount": 127,
+        "recalcStyleCount": 444,
+        "layoutMs": 124.6,
+        "recalcStyleMs": 867.1,
+        "scriptMs": 921.8,
+        "mainThreadTaskMs": 3231.4
+      }
+    ]
+  }
+}

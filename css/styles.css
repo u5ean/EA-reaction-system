@@ -1,0 +1,206 @@
+/* ==========================================================================
+   Livestream Reaction Engine — styles
+   Section A: app shell (layout of the UI; not performance-relevant)
+   Section B: Phase 1 — CSS @keyframes engine (DELIBERATELY animates layout props)
+   Section C: Phase 2 — GSAP engine (static styles only; GSAP drives x/y/scale/opacity)
+   ========================================================================== */
+
+/* Design tokens: colours defined once, reused everywhere (change here = change everywhere). */
+:root {
+  --bg-1: #0f1020;                         /* page background (dark end of gradient) */
+  --bg-2: #1b1440;                         /* page background (purple glow) */
+  --glass: rgba(255, 255, 255, 0.08);      /* translucent panel fill */
+  --glass-border: rgba(255, 255, 255, 0.16);
+  --text: #f2f3ff;
+  --muted: #a9acd0;                        /* secondary text */
+  --accent: #7c5cff;                       /* primary buttons / active toggle */
+  --heart: #ff4d6d;                        /* default reaction colours */
+  --thumb: #4da3ff;
+  --fire: #ff8a3d;
+  --star: #ffd23f;
+}
+
+* { box-sizing: border-box; }              /* width/height include padding+border: easier sizing */
+html, body { height: 100%; margin: 0; }
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: var(--text);
+  background: radial-gradient(1200px 800px at 50% 110%, var(--bg-2), var(--bg-1));
+  overflow: hidden;                        /* no scrollbars: reactions must never cause page scroll */
+}
+
+/* ---------- A. Shell ---------- */
+
+/* Top bar: title (left), mode toggle (centre), stats (right). Wraps on narrow screens. */
+.topbar {
+  position: fixed; top: 12px; left: 12px; right: 12px; z-index: 10;
+  display: flex; gap: 12px; align-items: center; justify-content: space-between;
+  flex-wrap: wrap;
+  pointer-events: none;                    /* empty space in the bar doesn't block anything... */
+}
+.topbar > * { pointer-events: auto; }      /* ...but the panels themselves stay clickable */
+
+/* Reusable "frosted glass" panel look. */
+.panel {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  padding: 8px 12px;
+  backdrop-filter: blur(6px);
+}
+.title { font-weight: 700; letter-spacing: .2px; }
+.title small { display: block; font-weight: 400; color: var(--muted); font-size: 11px; }
+
+/* Phase 1 / Phase 2 segmented toggle. */
+.mode-switch { display: inline-flex; padding: 3px; gap: 3px; }
+.mode-switch button {
+  border: 0; background: transparent; color: var(--muted);
+  padding: 7px 14px; border-radius: 10px; font: inherit; font-size: 13px; cursor: pointer;
+}
+/* aria-pressed="true" is set by app.js on the active mode; the same attribute styles it. */
+.mode-switch button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+
+/* Live stats panel (FPS / active / nodes) — two-column grid, tabular digits so numbers don't jiggle. */
+.stats { font-variant-numeric: tabular-nums; font-size: 12px; color: var(--muted); display: grid; grid-template-columns: auto auto; gap: 2px 14px; }
+.stats b { color: var(--text); font-weight: 600; text-align: right; }
+
+/* Spawn area indicator: a soft glow at the bottom showing where reactions begin. Purely visual. */
+.spawn-zone {
+  position: fixed; left: 50%; bottom: 0; transform: translateX(-50%);
+  width: min(360px, 90vw); height: 70px; z-index: 1; pointer-events: none;
+  border-radius: 999px 999px 0 0;
+  background: linear-gradient(to top, rgba(124, 92, 255, .22), transparent);
+  border-top: 1px dashed rgba(255,255,255,.18);
+}
+
+/* Control bar (bottom centre): reaction buttons, send, stress, speed, tint. */
+.controls {
+  position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%);
+  z-index: 10; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center;
+  max-width: calc(100vw - 24px);
+}
+/* Round emoji buttons. */
+.emoji-btn {
+  width: 48px; height: 48px; border-radius: 50%;
+  border: 1px solid var(--glass-border); background: var(--glass);
+  display: grid; place-items: center; cursor: pointer; padding: 0;
+  transition: transform .12s ease;         /* small hover/press feedback (these buttons aren't animated reactions) */
+}
+.emoji-btn:hover { transform: scale(1.1); }
+.emoji-btn:active { transform: scale(.94); }
+.emoji-btn svg { width: 26px; height: 26px; }
+
+/* Primary and secondary pill buttons. */
+.btn {
+  border: 0; border-radius: 999px; padding: 12px 20px; font: inherit; font-weight: 600;
+  color: #fff; background: var(--accent); cursor: pointer;
+  user-select: none;                       /* holding the button shouldn't select text */
+  touch-action: manipulation;              /* avoids double-tap zoom delay on phones */
+}
+.btn.secondary { background: var(--glass); border: 1px solid var(--glass-border); font-weight: 500; }
+.btn:active { filter: brightness(.9); }
+/* Visible keyboard focus ring (accessibility). */
+.btn:focus-visible, .emoji-btn:focus-visible, .mode-switch button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+/* Speed slider group. `.disabled` is toggled by app.js in Phase 1 (slider is Phase 2 only). */
+.speed { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+.speed input[type="range"] { width: 130px; accent-color: var(--accent); }
+.speed output { color: var(--text); min-width: 3ch; font-variant-numeric: tabular-nums; }
+.speed.disabled { opacity: .45; }
+
+/* Tint group: checkbox (on/off) + colour picker (which colour). */
+.tint { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+.tint input[type="color"] { width: 28px; height: 24px; padding: 0; border: 0; background: none; cursor: pointer; }
+
+/* Small instruction line under the top bar. */
+.hint { position: fixed; top: 74px; left: 50%; transform: translateX(-50%); color: var(--muted); font-size: 12px; z-index: 2; text-align: center; pointer-events: none; }
+
+/* ---------- Stage + shared reaction look ---------- */
+
+/* Full-screen transparent layer that holds all reactions. overflow:hidden clips anything off-screen.
+   pointer-events:none lets clicks pass through to the page. */
+.stage { position: fixed; inset: 0; overflow: hidden; z-index: 2; pointer-events: none; }
+
+/* Base look shared by BOTH engines. */
+.reaction {
+  position: absolute;                      /* positioned relative to the stage */
+  pointer-events: none;
+  /* each reaction type sets `--reaction-color`; the SVG fills with currentColor, so changing
+     `color` recolours the vector icon at runtime (this is what the Tint feature uses) */
+  color: var(--reaction-color, #fff);
+}
+.reaction svg { display: block; width: 100%; height: 100%; fill: currentColor; filter: none; } /* no filters: they'd add paint cost */
+
+/* Default colour per reaction type (chosen by the data-type attribute set in icons.js). */
+.reaction[data-type="heart"] { --reaction-color: var(--heart); }
+.reaction[data-type="thumb"] { --reaction-color: var(--thumb); }
+.reaction[data-type="fire"]  { --reaction-color: var(--fire); }
+.reaction[data-type="star"]  { --reaction-color: var(--star); }
+
+/* TINT: when the checkbox is on, app.js sets data-tint="on" and --tint (the picked colour) on the stage.
+   This rule is more specific, so it overrides the per-type colours for every reaction — live ones included. */
+.stage[data-tint="on"] .reaction { --reaction-color: var(--tint, #7cffd1); }
+
+/* ---------- B. Phase 1 — pure CSS @keyframes (layout props on purpose) ---------- */
+
+/* Class added by engine-css.js; adding it starts the animation. */
+.reaction--css {
+  /* --x and --sway are injected per element from JavaScript (random values) */
+  left: var(--x);                          /* start x position */
+  bottom: var(--start-bottom);             /* start height above the bottom edge */
+  width: var(--size-from);                 /* start size (grows via keyframes) */
+  height: var(--size-from);
+  --start-bottom: 80px;
+  --size-from: 28px;
+  --size-to: 56px;
+  /* name  duration  timing  fill-mode: `linear` = constant rate; `forwards` = stay at final state at the end */
+  animation: float-css 3s linear forwards;
+}
+
+/* The keyframes below animate: bottom, margin-left, width, height  (all LAYOUT-triggering — this is the point of
+   Phase 1) plus opacity (compositor-only). The sway is a sine wave sampled every 5% of the 3s (2 full cycles);
+   each margin-left value is --sway multiplied by sin(...) so it swings left and right. Generated by script. */
+@keyframes float-css {
+  0% { bottom: var(--start-bottom); width: var(--size-from); height: var(--size-from); margin-left: calc(var(--sway) * 0.000); opacity: 1; }
+  5% { margin-left: calc(var(--sway) * 0.588); }
+  10% { margin-left: calc(var(--sway) * 0.951); }
+  15% { margin-left: calc(var(--sway) * 0.951); }
+  20% { margin-left: calc(var(--sway) * 0.588); }
+  25% { margin-left: calc(var(--sway) * 0.000); }
+  30% { margin-left: calc(var(--sway) * -0.588); }
+  35% { margin-left: calc(var(--sway) * -0.951); }
+  40% { margin-left: calc(var(--sway) * -0.951); }
+  45% { margin-left: calc(var(--sway) * -0.588); }
+  50% { margin-left: calc(var(--sway) * -0.000); }
+  55% { margin-left: calc(var(--sway) * 0.588); }
+  60% { margin-left: calc(var(--sway) * 0.951); opacity: 1; }
+  65% { margin-left: calc(var(--sway) * 0.951); }
+  70% { margin-left: calc(var(--sway) * 0.588); }
+  75% { margin-left: calc(var(--sway) * 0.000); }
+  80% { margin-left: calc(var(--sway) * -0.588); }
+  85% { margin-left: calc(var(--sway) * -0.951); }
+  90% { margin-left: calc(var(--sway) * -0.951); }
+  95% { margin-left: calc(var(--sway) * -0.588); }
+  100% { bottom: calc(100% - var(--size-to)); width: var(--size-to); height: var(--size-to); margin-left: calc(var(--sway) * -0.000); opacity: 0; }
+}
+
+/* ---------- C. Phase 2 — GSAP (GPU-composited properties only) ---------- */
+
+/* GSAP animates x / y / scale / opacity at runtime; everything here is STATIC (set once, never animated). */
+.reaction--gsap {
+  left: var(--x);
+  bottom: var(--start-bottom, 80px);
+  /* Rendered at its LARGEST size and scaled DOWN at start, so Chrome never has to
+     upsample a small raster -> stays crisp (resolution independence). */
+  width: 56px;
+  height: 56px;
+  margin-left: -28px;               /* centre on --x once, statically (not animated) */
+  transform-origin: 50% 50%;        /* scale grows from the centre of the icon */
+  will-change: transform, opacity;  /* hint: promote to its own compositor layer (GPU-composited) */
+  backface-visibility: hidden;      /* common extra hint that keeps the layer on the GPU */
+}
+
+/* Accessibility: users who ask for reduced motion get a slower Phase 1 animation. */
+@media (prefers-reduced-motion: reduce) {
+  .reaction--css { animation-duration: 6s; }
+}
