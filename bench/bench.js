@@ -6,7 +6,7 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 // Absolute file:// URL of index.html (the app works without a server).
-const URL_ = 'file://' + path.resolve(__dirname, '..', 'index.html');
+const URL_ = require('url').pathToFileURL(path.resolve(__dirname, '..', 'index.html')).href; // works on Windows, Mac and Linux
 const RUNS = 3; // repeat each mode 3 times: single runs are noisy
 
 /** Run ONE benchmark pass for one engine and return its numbers. saveTrace=true also records a DevTools trace. */
